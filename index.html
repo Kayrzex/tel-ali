@@ -63,10 +63,16 @@
     <audio id="jumpSound" src="sounds/dri.mp3"></audio>
     <audio id="failSound" src="sounds/olunce.mp3"></audio>
 
+    <!-- Ölünce gösterilecek resim -->
+    <img id="nahImage" src="nah.jpg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:30; max-width:60vw; max-height:60vh; box-shadow:0 0 30px #000; border-radius:20px;" alt="Nah" />
+
+    <!-- Tekrar Başlatma Butonu -->
+    <button id="mobileRestartBtn" style="display:none; position:fixed; bottom:120px; left:50%; transform:translateX(-50%); z-index:40; padding:18px 36px; font-size:22px; background:#fff; color:#222; border:2px solid #333; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">Tekrar Başlat</button>
+
     <!-- Dokunmatik kontroller -->
     <div id="touchControls">
-        <button id="jumpBtn">Zıpla</button>
-        <button id="crouchBtn">Eğil</button>
+        <button id="jumpBtn" aria-label="Zıpla">⬆️</button>
+        <button id="crouchBtn" aria-label="Eğil">⬇️</button>
     </div>
 
     <script>
@@ -84,6 +90,7 @@
         let isGameOver = false;
         let walkFrame = 0;
         let walkTimer = 0;
+        let gameStarted = false;
 
         function resetGameState() {
             gravity = 0.6;
@@ -130,11 +137,45 @@
         document.body.appendChild(gameOverScreen);
         gameOverScreen.style.display = "none";
 
+        // Ölünce nah.jpg göster
+        const nahImage = document.getElementById('nahImage');
+        function showNahImage() {
+            nahImage.style.display = 'block';
+        }
+        function hideNahImage() {
+            nahImage.style.display = 'none';
+        }
+
+        // Tekrar Başlatma Butonu
+        const mobileRestartBtn = document.getElementById('mobileRestartBtn');
+        function showMobileRestartBtn() {
+            mobileRestartBtn.style.display = 'block';
+        }
+        function hideMobileRestartBtn() {
+            mobileRestartBtn.style.display = 'none';
+        }
+        mobileRestartBtn.addEventListener('click', function() {
+            failSound.pause();
+            failSound.currentTime = 0;
+            failSound.loop = false;
+            hideGameOverScreen();
+            hideMobileRestartBtn();
+            if (isGameOver) {
+                resetGameState();
+            }
+            gameStarted = true;
+            gameLoop();
+        });
+
         function showGameOverScreen() {
             gameOverScreen.style.display = "flex";
+            showNahImage();
+            showMobileRestartBtn();
         }
         function hideGameOverScreen() {
             gameOverScreen.style.display = "none";
+            hideNahImage();
+            hideMobileRestartBtn();
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -148,10 +189,26 @@
                     if (isGameOver) {
                         resetGameState();
                     }
+                    gameStarted = true;
                     gameLoop();
                 });
             }
         });
+
+        // Oyun başlatıcı fonksiyon
+        function startGameIfNotStarted() {
+            if (!gameStarted) {
+                failSound.pause();
+                failSound.currentTime = 0;
+                failSound.loop = false;
+                intro.style.display = "none";
+                if (isGameOver) {
+                    resetGameState();
+                }
+                gameStarted = true;
+                gameLoop();
+            }
+        }
 
         function drawPlayer() {
             ctx.strokeStyle = player.color;
@@ -196,21 +253,23 @@
         function spawnObstacle() {
             // Rastgele engel tipi: alçak (aşağıda), yüksek (havada ama daha aşağıda)
             const typeRand = Math.random();
-            let type, height, y;
+            let type, height, y, width, startX;
+            width = 18; // Engelleri incelt
+            startX = canvas.width - 120; // Daha erken ekrana girsin
             if (typeRand < 0.5) {
                 // Aşağıda engel
                 type = "low";
-                height = 20;
-                y = canvas.height - 40;
+                height = 40; // Büyüt
+                y = canvas.height - 60;
             } else {
                 // Havada engel ama daha aşağıda, eğilerek geçilebilecek yükseklikte
-                height = 20;
-                y = canvas.height - 130; // Yerden 80px yukarıda, eğilerek geçilebilir
+                height = 40; // Büyüt
+                y = canvas.height - 170; // Yerden daha yukarıda
                 type = "high";
             }
             obstacles.push({
-                x: canvas.width,
-                width: 20,
+                x: startX,
+                width: width,
                 height: height,
                 y: y,
                 type: type
@@ -260,12 +319,8 @@
                         failSound.currentTime = 0;
                         failSound.loop = false;
                         failSound.play();
+                        showGameOverScreen(); // Hemen göster
                         cancelAnimationFrame(animationId);
-                        setTimeout(() => {
-                            failSound.pause();
-                            failSound.currentTime = 0;
-                            showGameOverScreen();
-                        }, 3000);
                         return;
                     }
                 } else {
@@ -280,12 +335,8 @@
                         failSound.currentTime = 0;
                         failSound.loop = false;
                         failSound.play();
+                        showGameOverScreen(); // Hemen göster
                         cancelAnimationFrame(animationId);
-                        setTimeout(() => {
-                            failSound.pause();
-                            failSound.currentTime = 0;
-                            showGameOverScreen();
-                        }, 3000);
                         return;
                     }
                 }
@@ -327,6 +378,7 @@
         let spawnTimer = 0;
         let animationId;
         function gameLoop() {
+            if (!gameStarted) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawGround();
             update();
@@ -344,6 +396,9 @@
         }
 
         document.addEventListener("keydown", (e) => {
+            if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !gameStarted) {
+                startGameIfNotStarted();
+            }
             keys[e.key] = true;
             if ((e.key === " " || e.key === "ArrowUp") && !isJumping) {
                 player.velocityY = -12;
@@ -360,14 +415,8 @@
         const intro = document.getElementById("intro");
         const startBtn = document.getElementById("startBtn");
         startBtn.addEventListener("click", () => {
-            failSound.pause();
-            failSound.currentTime = 0;
-            failSound.loop = false;
-            intro.style.display = "none";
-            if (isGameOver) {
-                resetGameState();
-            }
-            gameLoop();
+            // Kullanıcı isterse yine başlatabilir
+            startGameIfNotStarted();
         });
 
         // Dokunmatik kontroller için CSS
@@ -375,22 +424,22 @@
         style.innerHTML = `
         #touchControls {
             position: absolute;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 30px;
+            gap: 50px;
             z-index: 20;
         }
         #touchControls button {
-            padding: 18px 32px;
-            font-size: 22px;
+            padding: 32px 38px;
+            font-size: 38px;
             background: #fff;
             color: #222;
             border: 2px solid #333;
-            border-radius: 10px;
-            opacity: 0.85;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-radius: 16px;
+            opacity: 0.92;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
         }
         @media (min-width: 800px) {
             #touchControls { display: none; }
@@ -405,6 +454,7 @@
         // Zıpla butonuna dokununca
         jumpBtn.addEventListener('touchstart', function (e) {
             e.preventDefault();
+            startGameIfNotStarted();
             if (!isJumping && !isGameOver) {
                 player.velocityY = -12;
                 isJumping = true;
@@ -416,6 +466,7 @@
         // Eğil butonuna basılı tutunca eğil, bırakınca kalk
         crouchBtn.addEventListener('touchstart', function (e) {
             e.preventDefault();
+            startGameIfNotStarted();
             keys['ArrowDown'] = true;
         });
         crouchBtn.addEventListener('touchend', function (e) {
@@ -426,4 +477,3 @@
 </body>
 
 </html>
-```
