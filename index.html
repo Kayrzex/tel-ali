@@ -60,14 +60,16 @@
     </div>
 
     <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <audio id="jumpSound" src="sounds/dri.mp3"></audio>
-    <audio id="failSound" src="sounds/olunce.mp3"></audio>
 
     <!-- Ölünce gösterilecek resim -->
-    <img id="nahImage" src="nah.jpg" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:30; max-width:60vw; max-height:60vh; box-shadow:0 0 30px #000; border-radius:20px;" alt="Nah" />
+    <img id="nahImage" src="nah.jpg"
+        style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:30; max-width:60vw; max-height:60vh; box-shadow:0 0 30px #000; border-radius:20px;"
+        alt="Nah" />
 
     <!-- Tekrar Başlatma Butonu -->
-    <button id="mobileRestartBtn" style="display:none; position:fixed; bottom:120px; left:50%; transform:translateX(-50%); z-index:40; padding:18px 36px; font-size:22px; background:#fff; color:#222; border:2px solid #333; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">Tekrar Başlat</button>
+    <button id="mobileRestartBtn"
+        style="display:none; position:fixed; bottom:120px; left:50%; transform:translateX(-50%); z-index:40; padding:18px 36px; font-size:22px; background:#fff; color:#222; border:2px solid #333; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">Tekrar
+        Başlat</button>
 
     <!-- Dokunmatik kontroller -->
     <div id="touchControls">
@@ -78,8 +80,6 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const jumpSound = document.getElementById("jumpSound");
-        const failSound = document.getElementById("failSound");
 
         let gravity = 0.6;
         let isJumping = false;
@@ -154,10 +154,7 @@
         function hideMobileRestartBtn() {
             mobileRestartBtn.style.display = 'none';
         }
-        mobileRestartBtn.addEventListener('click', function() {
-            failSound.pause();
-            failSound.currentTime = 0;
-            failSound.loop = false;
+        mobileRestartBtn.addEventListener('click', function () {
             hideGameOverScreen();
             hideMobileRestartBtn();
             if (isGameOver) {
@@ -182,9 +179,6 @@
             const restartBtn = document.getElementById("restartBtn");
             if (restartBtn) {
                 restartBtn.addEventListener("click", () => {
-                    failSound.pause();
-                    failSound.currentTime = 0;
-                    failSound.loop = false;
                     hideGameOverScreen();
                     if (isGameOver) {
                         resetGameState();
@@ -198,9 +192,6 @@
         // Oyun başlatıcı fonksiyon
         function startGameIfNotStarted() {
             if (!gameStarted) {
-                failSound.pause();
-                failSound.currentTime = 0;
-                failSound.loop = false;
                 intro.style.display = "none";
                 if (isGameOver) {
                     resetGameState();
@@ -316,9 +307,6 @@
 
                     if (isHeadCollide || isBodyCollide) {
                         isGameOver = true;
-                        failSound.currentTime = 0;
-                        failSound.loop = false;
-                        failSound.play();
                         showGameOverScreen(); // Hemen göster
                         cancelAnimationFrame(animationId);
                         return;
@@ -332,9 +320,6 @@
                         player.y + player.height > obs.y
                     ) {
                         isGameOver = true;
-                        failSound.currentTime = 0;
-                        failSound.loop = false;
-                        failSound.play();
                         showGameOverScreen(); // Hemen göster
                         cancelAnimationFrame(animationId);
                         return;
@@ -403,8 +388,6 @@
             if ((e.key === " " || e.key === "ArrowUp") && !isJumping) {
                 player.velocityY = -12;
                 isJumping = true;
-                jumpSound.currentTime = 0;
-                jumpSound.play();
             }
         });
 
@@ -458,8 +441,6 @@
             if (!isJumping && !isGameOver) {
                 player.velocityY = -12;
                 isJumping = true;
-                jumpSound.currentTime = 0;
-                jumpSound.play();
             }
         });
 
