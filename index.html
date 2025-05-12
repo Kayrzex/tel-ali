@@ -213,6 +213,20 @@
             ctx.arc(player.x + player.width / 2, player.y - 20, 15, 0, Math.PI * 2);
             ctx.stroke();
 
+            // Ağız (gülümseme)
+            ctx.beginPath();
+            ctx.arc(player.x + player.width / 2, player.y - 13, 7, 0, Math.PI, false);
+            ctx.stroke();
+
+            // Gözler
+            ctx.beginPath();
+            ctx.arc(player.x + player.width / 2 - 5, player.y - 24, 2, 0, Math.PI * 2); // sol göz
+            ctx.arc(player.x + player.width / 2 + 5, player.y - 24, 2, 0, Math.PI * 2); // sağ göz
+            ctx.fillStyle = player.color;
+            ctx.fill();
+            ctx.strokeStyle = player.color;
+            ctx.stroke();
+
             // Body
             ctx.beginPath();
             ctx.moveTo(player.x + player.width / 2, player.y - 5);
@@ -237,6 +251,19 @@
         }
 
         function drawGround() {
+            // Arka plan resmi çiz
+            const bgImg = drawGround.bgImg || (drawGround.bgImg = new Image());
+            if (!drawGround.bgLoaded) {
+                bgImg.src = 'arka.jpg';
+                bgImg.onload = function() { drawGround.bgLoaded = true; };
+            }
+            if (drawGround.bgLoaded) {
+                ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = "#87ceeb";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            // Zemin
             ctx.fillStyle = "green";
             ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
         }
@@ -372,7 +399,8 @@
             drawScore();
 
             spawnTimer++;
-            if (!isGameOver && spawnTimer % 90 === 0) {
+            // Engel sıklığını daha da azaltmak için 130 yerine 180 yaptık
+            if (!isGameOver && spawnTimer % 180 === 0) {
                 spawnObstacle();
                 score++;
             }
@@ -383,6 +411,16 @@
         document.addEventListener("keydown", (e) => {
             if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !gameStarted) {
                 startGameIfNotStarted();
+            }
+            // Oyun bittiğinde space veya enter ile tekrar başlat
+            if (isGameOver && (e.key === " " || e.key === "Enter")) {
+                hideGameOverScreen();
+                if (isGameOver) {
+                    resetGameState();
+                }
+                gameStarted = true;
+                gameLoop();
+                return;
             }
             keys[e.key] = true;
             if ((e.key === " " || e.key === "ArrowUp") && !isJumping) {
